@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "berbagi-file",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "berbagi-file"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_URL": "/sign-up",
+    "NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL": "/dashboard",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL": "/dashboard",
+    "RESEND_FROM": "berbagi-file <onboarding@resend.dev>",
+    "MAX_FILE_SIZE": "26214400"
+  }
+}

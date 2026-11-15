@@ -12,7 +12,7 @@ Scaffolded Next.js app (App Router, TypeScript, Tailwind v4). Lint/typecheck/bui
 - Clerk (`@clerk/nextjs`, `proxy.ts` in Next 16 replaces `middleware.ts`)
 - Resend (upload notifications)
 - Cloudflare R2 via S3 SDK (presigned upload/download)
-- Deploy target: Cloudflare (Pages/Workers via `@opennextjs/cloudflare`)
+- Deploy target: Cloudflare Workers via `@opennextjs/cloudflare` + Wrangler (`wrangler.jsonc`, `open-next.config.ts`)
 
 ## Commands
 - `npm run dev` — dev server (webpack; Turbopack native bindings are unavailable on Android/Termux)
@@ -20,7 +20,11 @@ Scaffolded Next.js app (App Router, TypeScript, Tailwind v4). Lint/typecheck/bui
 - `npm run build:webpack` — production build with webpack (use on Termux/arm64)
 - `npm run lint` — ESLint
 - `npm run typecheck` — `tsc --noEmit`
+- `npm run deploy` — OpenNext build + deploy to Cloudflare (CI only; see below)
 - No test runner is configured yet.
+
+## Deploy
+Deployment runs from `.github/workflows/deploy.yml` on push to `main` (Ubuntu runner), because `opennextjs-cloudflare` needs native `@ast-grep` bindings that do not exist for Android/arm64. Required GitHub Actions secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and the app secrets from `.env.example`. Non-secret runtime values live in `wrangler.jsonc` under `vars`.
 
 ## Environment
 Copy `.env.example` to `.env.local` and fill in Clerk, `DATABASE_URL`, R2, and Resend values. Never commit real secrets.

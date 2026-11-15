@@ -1,0 +1,68 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_TO: ${{ secrets.RESEND_TO }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --legacy-peer-deps
+      - run: npm run typecheck
+      - run: npm run lint
+
+      - name: Build and deploy
+        run: npm run deploy
+
+      - name: Sync Worker secrets
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: |
+          node - <<'NODE'
+          const fs = require("node:fs");
+          const keys = [
+            "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+            "CLERK_SECRET_KEY",
+            "DATABASE_URL",
+            "R2_ACCOUNT_ID",
+            "R2_ACCESS_KEY_ID",
+            "R2_SECRET_ACCESS_KEY",
+            "R2_BUCKET",
+            "RESEND_API_KEY",
+            "RESEND_TO",
+          ];
+          const secrets = Object.fromEntries(
+            keys.filter((key) => process.env[key]).map((key) => [key, process.env[key]]),
+          );
+          const file = `${process.env.RUNNER_TEMP}/worker-secrets.json`;
+          fs.writeFileSync(file, JSON.stringify(secrets));
+          console.log(`Prepared ${Object.keys(secrets).length} secrets for ${file}`);
+          NODE
+          npx --no-install wrangler secret bulk "$RUNNER_TEMP/worker-secrets.json"
