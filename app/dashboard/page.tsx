@@ -38,6 +38,7 @@ export default async function DashboardPage() {
           <FileList
             files={files}
             emptyText="Anda belum mengunggah file."
+            canDelete
           />
         </section>
       </main>

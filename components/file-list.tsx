@@ -1,14 +1,17 @@
 import type { FileRecord } from "@/lib/db";
 import { formatBytes } from "@/lib/file-types";
+import { DeleteFileButton } from "@/components/delete-file-button";
 
 type FileListProps = {
   files: FileRecord[];
   emptyText?: string;
+  canDelete?: boolean;
 };
 
 export function FileList({
   files,
   emptyText = "Belum ada file yang dibagikan.",
+  canDelete = false,
 }: FileListProps) {
   if (files.length === 0) {
     return <p className="text-sm text-slate-500">{emptyText}</p>;
@@ -34,12 +37,17 @@ export function FileList({
               </p>
             ) : null}
           </div>
-          <a
-            href={`/api/download/${file.id}`}
-            className="shrink-0 rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
-          >
-            Unduh
-          </a>
+          <div className="flex shrink-0 items-center gap-2">
+            <a
+              href={`/api/download/${file.id}`}
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
+            >
+              Unduh
+            </a>
+            {canDelete ? (
+              <DeleteFileButton fileId={file.id} title={file.title} />
+            ) : null}
+          </div>
         </li>
       ))}
     </ul>

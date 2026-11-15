@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -40,6 +41,14 @@ export async function createUploadUrl(key: string, contentType: string) {
     ContentType: contentType,
   });
   return getSignedUrl(getR2Client(), command, { expiresIn: 600 });
+}
+
+export async function deleteObject(key: string) {
+  const command = new DeleteObjectCommand({
+    Bucket: getBucket(),
+    Key: key,
+  });
+  await getR2Client().send(command);
 }
 
 export async function createDownloadUrl(key: string, fileName?: string) {
